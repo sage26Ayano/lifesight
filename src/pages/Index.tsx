@@ -1,10 +1,10 @@
-import { DashboardProvider } from '../context/DashboardContext';
-import Summary from '../components/Summary';
-import Filters from '../components/Filters';
-import Chart from '../components/Chart';
-import Table from '../components/Table';
-import Pagination from '../components/Pagination';
-import '../styles/layout.css';
+import { DashboardProvider } from "@/context/DashboardContext";
+import Summary from "@/components/Summary";
+import Filters from "@/components/Filters";
+import Chart from "@/components/Chart";
+import Table from "@/components/Table";
+import Pagination from "@/components/Pagination";
+import "@/styles/layout.css";
 
 const Index = () => {
   return (
@@ -18,11 +18,11 @@ const Index = () => {
         </header>
 
         <Summary />
-        
+
         <Filters />
-        
+
         <Chart />
-        
+
         <Table />
         <Pagination />
       </div>

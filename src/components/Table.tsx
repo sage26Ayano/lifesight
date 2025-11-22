@@ -1,6 +1,39 @@
-import { memo, useCallback } from 'react';
+import { memo, useCallback, useMemo } from 'react';
 import { useDashboard } from '../context/DashboardContext';
 import '../styles/table.css';
+
+interface DataRecord {
+  id: number;
+  channel: string;
+  spend: number;
+  impressions: number;
+  conversions: number;
+}
+
+// Memoized formatters - created once outside component to prevent recreation
+const formatNumber = (num: number) => {
+  return new Intl.NumberFormat('en-US').format(num);
+};
+
+const formatCurrency = (num: number) => {
+  return new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    minimumFractionDigits: 0,
+  }).format(num);
+};
+
+// Memoized TableRow component to prevent unnecessary re-renders
+const TableRow = memo(({ row }: { row: DataRecord }) => (
+  <tr>
+    <td className="channel">{row.channel}</td>
+    <td className="number">{formatCurrency(row.spend)}</td>
+    <td className="number">{formatNumber(row.impressions)}</td>
+    <td className="number">{formatNumber(row.conversions)}</td>
+  </tr>
+));
+
+TableRow.displayName = 'TableRow';
 
 const Table = memo(() => {
   const { paginatedData, sortField, sortDirection, setSorting } = useDashboard();
@@ -9,22 +42,19 @@ const Table = memo(() => {
     setSorting(field);
   }, [setSorting]);
 
-  const formatNumber = (num: number) => {
-    return new Intl.NumberFormat('en-US').format(num);
-  };
-
-  const formatCurrency = (num: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-    }).format(num);
-  };
-
-  const getSortClass = (field: string) => {
+  // Memoize sort class calculation
+  const getSortClass = useCallback((field: string) => {
     if (sortField !== field) return 'sortable';
     return sortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc';
-  };
+  }, [sortField, sortDirection]);
+
+  // Memoize header classes to prevent recalculation
+  const headerClasses = useMemo(() => ({
+    channel: getSortClass('channel'),
+    spend: getSortClass('spend'),
+    impressions: getSortClass('impressions'),
+    conversions: getSortClass('conversions'),
+  }), [getSortClass]);
 
   return (
     <div className="table-container">
@@ -32,25 +62,25 @@ const Table = memo(() => {
         <thead>
           <tr>
             <th 
-              className={getSortClass('channel')}
+              className={headerClasses.channel}
               onClick={() => handleSort('channel')}
             >
               Channel
             </th>
             <th 
-              className={getSortClass('spend')}
+              className={headerClasses.spend}
               onClick={() => handleSort('spend')}
             >
               Spend
             </th>
             <th 
-              className={getSortClass('impressions')}
+              className={headerClasses.impressions}
               onClick={() => handleSort('impressions')}
             >
               Impressions
             </th>
             <th 
-              className={getSortClass('conversions')}
+              className={headerClasses.conversions}
               onClick={() => handleSort('conversions')}
             >
               Conversions
@@ -59,12 +89,7 @@ const Table = memo(() => {
         </thead>
         <tbody>
           {paginatedData.map((row) => (
-            <tr key={row.id}>
-              <td className="channel">{row.channel}</td>
-              <td className="number">{formatCurrency(row.spend)}</td>
-              <td className="number">{formatNumber(row.impressions)}</td>
-              <td className="number">{formatNumber(row.conversions)}</td>
-            </tr>
+            <TableRow key={row.id} row={row} />
           ))}
         </tbody>
       </table>

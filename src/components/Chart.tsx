@@ -6,24 +6,31 @@ import '../styles/layout.css';
 const Chart = memo(() => {
   const { filteredData } = useDashboard();
 
-  // Aggregate data by channel
+  // Aggregate data by channel - OPTIMIZED: using Map for O(n) instead of O(n²) with find()
   const chartData = useMemo(() => {
-    const aggregated = filteredData.reduce((acc, item) => {
-      const existing = acc.find(d => d.channel === item.channel);
+    // Use Map for O(1) lookup instead of find() which is O(n)
+    const channelMap = new Map<string, { channel: string; spend: number; conversions: number }>();
+    
+    for (let i = 0; i < filteredData.length; i++) {
+      const item = filteredData[i];
+      const existing = channelMap.get(item.channel);
+      
       if (existing) {
         existing.spend += item.spend;
         existing.conversions += item.conversions;
       } else {
-        acc.push({
+        channelMap.set(item.channel, {
           channel: item.channel,
           spend: item.spend,
           conversions: item.conversions,
         });
       }
-      return acc;
-    }, [] as Array<{ channel: string; spend: number; conversions: number; }>);
+    }
 
-    return aggregated.sort((a, b) => b.spend - a.spend).slice(0, 10);
+    // Convert Map values to array, sort, and take top 10
+    const aggregated = Array.from(channelMap.values());
+    aggregated.sort((a, b) => b.spend - a.spend);
+    return aggregated.slice(0, 10);
   }, [filteredData]);
 
   return (

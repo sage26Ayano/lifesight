@@ -19,6 +19,7 @@ interface DashboardContextType {
   currentPage: number;
   setCurrentPage: (page: number) => void;
   pageSize: number;
+  setPageSize: (size: number) => void;
   filteredData: DataRecord[];
   sortedData: DataRecord[];
   paginatedData: DataRecord[];
@@ -38,25 +39,43 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
   const [sortField, setSortField] = useState<keyof DataRecord | null>(null);
   const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('asc');
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const pageSize = 10;
+  const [pageSize, setPageSize] = useState<number>(10);
 
-  // Get unique channels for filter dropdown
+  // Get unique channels for filter dropdown - optimized with Set
   const uniqueChannels = useMemo(() => {
-    const channels = Array.from(new Set(data.map(item => item.channel)));
-    return ['All', ...channels.sort()];
+    const channelSet = new Set<string>();
+    for (let i = 0; i < data.length; i++) {
+      channelSet.add(data[i].channel);
+    }
+    const channels = Array.from(channelSet).sort();
+    return ['All', ...channels];
   }, [data]);
 
-  // Filter data based on selected channel
+  // Filter data based on selected channel - optimized with early return
   const filteredData = useMemo(() => {
     if (filterChannel === 'All') return data;
-    return data.filter(item => item.channel === filterChannel);
+    
+    // Use for loop for better performance with large datasets
+    const filtered: DataRecord[] = [];
+    for (let i = 0; i < data.length; i++) {
+      if (data[i].channel === filterChannel) {
+        filtered.push(data[i]);
+      }
+    }
+    return filtered;
   }, [data, filterChannel]);
 
-  // Sort filtered data
+  // Sort filtered data - optimized to only sort when needed
   const sortedData = useMemo(() => {
     if (!sortField) return filteredData;
     
-    const sorted = [...filteredData].sort((a, b) => {
+    // Create typed sort function for better performance
+    const sorted = new Array(filteredData.length);
+    for (let i = 0; i < filteredData.length; i++) {
+      sorted[i] = filteredData[i];
+    }
+    
+    sorted.sort((a, b) => {
       const aValue = a[sortField];
       const bValue = b[sortField];
       
@@ -81,24 +100,28 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
     return Math.ceil(sortedData.length / pageSize);
   }, [sortedData.length, pageSize]);
 
-  // Get paginated data
+  // Get paginated data - optimized slice
   const paginatedData = useMemo(() => {
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
     return sortedData.slice(startIndex, endIndex);
   }, [sortedData, currentPage, pageSize]);
 
-  // Summary metrics calculations
-  const totalSpend = useMemo(() => {
-    return filteredData.reduce((sum, item) => sum + item.spend, 0);
-  }, [filteredData]);
-
-  const totalConversions = useMemo(() => {
-    return filteredData.reduce((sum, item) => sum + item.conversions, 0);
-  }, [filteredData]);
-
-  const totalImpressions = useMemo(() => {
-    return filteredData.reduce((sum, item) => sum + item.impressions, 0);
+  // Summary metrics calculations - OPTIMIZED: single pass instead of multiple reduces
+  const { totalSpend, totalConversions, totalImpressions } = useMemo(() => {
+    let spend = 0;
+    let conversions = 0;
+    let impressions = 0;
+    
+    // Single pass through filteredData instead of 3 separate reduces
+    for (let i = 0; i < filteredData.length; i++) {
+      const item = filteredData[i];
+      spend += item.spend;
+      conversions += item.conversions;
+      impressions += item.impressions;
+    }
+    
+    return { totalSpend: spend, totalConversions: conversions, totalImpressions: impressions };
   }, [filteredData]);
 
   const ctr = useMemo(() => {
@@ -122,6 +145,11 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
     setCurrentPage(1); // Reset to first page on filter
   }, []);
 
+  const handlePageSizeChange = useCallback((size: number) => {
+    setPageSize(size);
+    setCurrentPage(1); // Reset to first page when changing page size
+  }, []);
+
   const value = {
     data,
     filterChannel,
@@ -132,6 +160,7 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
     currentPage,
     setCurrentPage,
     pageSize,
+    setPageSize: handlePageSizeChange,
     filteredData,
     sortedData,
     paginatedData,
