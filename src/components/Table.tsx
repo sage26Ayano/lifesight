@@ -42,13 +42,11 @@ const Table = memo(() => {
     setSorting(field);
   }, [setSorting]);
 
-  // Memoize sort class calculation
   const getSortClass = useCallback((field: string) => {
     if (sortField !== field) return 'sortable';
     return sortDirection === 'asc' ? 'sorted-asc' : 'sorted-desc';
   }, [sortField, sortDirection]);
 
-  // Memoize header classes to prevent recalculation
   const headerClasses = useMemo(() => ({
     channel: getSortClass('channel'),
     spend: getSortClass('spend'),

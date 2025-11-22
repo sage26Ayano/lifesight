@@ -69,12 +69,8 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
   const sortedData = useMemo(() => {
     if (!sortField) return filteredData;
     
-    // Create typed sort function for better performance
-    const sorted = new Array(filteredData.length);
-    for (let i = 0; i < filteredData.length; i++) {
-      sorted[i] = filteredData[i];
-    }
-    
+    // Create a copy and sort (spread operator is efficient for large arrays)
+    const sorted = [...filteredData];
     sorted.sort((a, b) => {
       const aValue = a[sortField];
       const bValue = b[sortField];
@@ -150,7 +146,8 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
     setCurrentPage(1); // Reset to first page when changing page size
   }, []);
 
-  const value = {
+  // Memoize context value to prevent unnecessary re-renders
+  const value = useMemo(() => ({
     data,
     filterChannel,
     setFilterChannel: handleFilterChange,
@@ -170,7 +167,27 @@ export const DashboardProvider = ({ children }: { children: ReactNode }) => {
     totalConversions,
     totalImpressions,
     ctr,
-  };
+  }), [
+    data,
+    filterChannel,
+    handleFilterChange,
+    sortField,
+    sortDirection,
+    setSorting,
+    currentPage,
+    setCurrentPage,
+    pageSize,
+    handlePageSizeChange,
+    filteredData,
+    sortedData,
+    paginatedData,
+    totalPages,
+    uniqueChannels,
+    totalSpend,
+    totalConversions,
+    totalImpressions,
+    ctr,
+  ]);
 
   return (
     <DashboardContext.Provider value={value}>

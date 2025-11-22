@@ -1,14 +1,17 @@
-import { memo, useCallback } from 'react';
-import { useDashboard } from '../context/DashboardContext';
-import Select from './Select';
-import '../styles/layout.css';
+import { memo, useCallback } from "react";
+import { useDashboard } from "@/context/DashboardContext";
+import Select from "./Select";
+import "../styles/layout.css";
 
 const Filters = memo(() => {
   const { filterChannel, setFilterChannel, uniqueChannels } = useDashboard();
 
-  const handleChannelChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    setFilterChannel(e.target.value);
-  }, [setFilterChannel]);
+  const handleChannelChange = useCallback(
+    (e: React.ChangeEvent<HTMLSelectElement>) => {
+      setFilterChannel(e.target.value);
+    },
+    [setFilterChannel]
+  );
 
   return (
     <div className="filters-section">
@@ -25,6 +28,6 @@ const Filters = memo(() => {
   );
 });
 
-Filters.displayName = 'Filters';
+Filters.displayName = "Filters";
 
 export default Filters;
