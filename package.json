@@ -9,7 +9,9 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "homepage": "https://master-coding.github.io/marketing-dashboard"
+    "homepage": "https://github.com/sage26Ayano/lifesight",
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
