@@ -9,7 +9,7 @@
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "homepage": "https://github.com/sage26Ayano/lifesight",
+    "homepage": "https://sage26ayano.github.io/lifesight",
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"
   },
